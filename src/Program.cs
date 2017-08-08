@@ -5,11 +5,15 @@ using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Plaintext
 {
     public class Program
     {
+        private static readonly byte[] _helloWorldPayload = Encoding.UTF8.GetBytes("Hello, World!");
+
         public static void Main(string[] args)
         {
             int? threadCount = null;
@@ -45,16 +49,25 @@ namespace Plaintext
 #else
 #error Target framework needs to be updated
 #endif
-                .Configure(app => app.Run(async (context) =>
+                .Configure(app => app.Run((context) =>
                 {
-                    await context.Response.WriteAsync($"Hello from .NET Core {netCoreVersion}");
+                    return WriteResponse(context.Response);
                 }))
                 .UseUrls("http://*:5000")
                 .Build()
                 .Run();
         }
 
-        public static string GetNetCoreVersion()
+        private static Task WriteResponse(HttpResponse response)
+        {
+            var payloadLength = _helloWorldPayload.Length;
+            response.StatusCode = 200;
+            response.ContentType = "text/plain";
+            response.ContentLength = payloadLength;
+            return response.Body.WriteAsync(_helloWorldPayload, 0, payloadLength);
+        }
+
+        private static string GetNetCoreVersion()
         {
             var appName = PlatformServices.Default.Application.ApplicationName;
             var json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, $"{appName}.runtimeconfig.json"));
