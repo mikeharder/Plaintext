@@ -49,17 +49,17 @@ namespace Plaintext
 #else
 #error Target framework needs to be updated
 #endif
-                .Configure(app => app.Run((context) =>
-                {
-                    return WriteResponse(context.Response);
-                }))
+                .Configure(app => app.Run(WriteResponse))
                 .UseUrls("http://*:5000")
                 .Build()
                 .Run();
         }
 
-        private static Task WriteResponse(HttpResponse response)
+
+        private static Task WriteResponse(HttpContext context)
         {
+            var response = context.Response;
+
             var payloadLength = _helloWorldPayload.Length;
             response.StatusCode = 200;
             response.ContentType = "text/plain";
